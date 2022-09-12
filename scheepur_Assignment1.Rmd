@@ -1,0 +1,58 @@
+---
+title: "Assignment1_Sep11"
+author: "Sandhya Cheepurupalli"
+date: "2022-09-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Packages
+
+Below are the packages that were installed
+
+```{r eval=TRUE}
+require(tidyverse)
+require(car)
+library(tidyverse)
+library(car)
+
+```
+### Importing DataSet
+In this section a data set from a .csv file is imported into RStudio and the data is printed
+
+```{r Importing DataSet}
+salesdata <- read.csv("https://query.data.world/s/wtwashv6h4f4ykobpecvrfo3ejwqts", header=TRUE, stringsAsFactors=FALSE);
+print(salesdata)
+```
+### Descriptive Statistics
+Here we summarize each of the columns in the dataset
+```{r Descriptive}
+summary(salesdata)
+```
+### Transforming Variable in the Dataset
+In this section we have created a new dataset from the previous one. The new dataset has a lesser number of columns from the previous. After creating a new dataset we renamed the columns in the dataset.
+
+```{r Descriptive Statistics}
+new_salesdata <- salesdata %>% select(Country, Item.Type, Sales.Channel, Units.Sold, Unit.Price, Unit.Cost, Total.Revenue, Total.Profit)
+names(new_salesdata) <- c('Country_Name', 'Item_Type', 'Sales_Channel_Type', 'Units_Sold', 'Unit_Price', 'Unit_Cost', 'Total_Revenue', 'Total_Profit')
+```
+
+### Including Plots 
+
+
+```{r Plots}
+Sales_channel <- table(new_salesdata$Sales_Channel_Type)
+labs <- paste(names(Sales_channel), "\n", Sales_channel, sep="")
+pct <- (Sales_channel/sum(Sales_channel)*100)
+labs <- paste(labs, pct) # add percents to labels
+labs <- paste(labs,"%",sep="") # ad % to labels
+pie(Sales_channel,labels = labs, col=rainbow(length(labs)),
+    main=" Pie chart of Sales channel type")
+
+scatterplot(Total_Profit ~ Total_Revenue| Sales_Channel_Type, data = new_salesdata)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
