@@ -14,9 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 Below are the packages that were installed
 
 ```{r eval=TRUE}
-require(ggplot)
+require(tidyverse)
 require(car)
-library(ggplot)
+library(tidyverse)
 library(car)
 
 ```
