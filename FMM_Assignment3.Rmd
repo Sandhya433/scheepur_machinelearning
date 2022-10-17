@@ -1,0 +1,99 @@
+---
+title: "FML_Assignment3"
+author: "Sandhya Cheepurupalli"
+date: "2022-10-16"
+output:
+  pdf_document: default
+  html_document: default
+---
+## Following Packages are required to run the following code
+```{r Packages}
+library(caret)
+library(dplyr)
+library(ISLR)
+library(e1071)
+```
+
+# Step-1 Reading the dataset
+```{r Reading dataset}
+setwd("C:\\Users\\sandh\\Downloads")
+mydata<-read.csv(file='UniversalBank.csv')
+mydata$Personal.Loan<-as.factor(mydata$Personal.Loan)
+mydata$Online<-as.factor(mydata$Online)#converting to factor
+mydata$CreditCard<-as.factor(mydata$CreditCard)#converting to factor
+
+```
+## Step-2 Removing unwanted data from the dataset
+```{r Cleansing data}
+mydata1<- mydata %>% select(Personal.Loan, Online, CreditCard)
+head(mydata1)
+```
+
+## Step-3 Partitioning dataset into training data and validation data
+```{r}
+set.seed(7)
+Train_Index = createDataPartition(mydata1$Personal.Loan,p=0.60, list=FALSE) 
+# 60% of remaining data as validation
+Train_Data = mydata1[Train_Index,]
+Validation_Data = mydata1[-Train_Index,]
+head(Train_Data)
+```
+## Question-A Creating Pivot Table with Online as Column and CC & Loan as rows
+```{r pivot1}
+table1<- ftable(Train_Data$Online,Train_Data$Personal.Loan,Train_Data$CreditCard, 
+                row.vars = c(2,3),dnn=c('Online','Personal.loan','CreditCard'))
+table1
+```
+## Question-B Finding the Probability for P(Loan=1 | P(CC=1), P(Online=1)) from the above Pivot Table
+```{r}
+P.loan<-table1[4,2]/(table1[2,2]+table1[4,2])
+P.loan
+```
+## Question-C Creating two Pivot Tables - One for Loan as Rows and Online as Columns - Other for Loan as Rows and CC as Columns
+```{r pivot2 and 3}
+table2<- ftable(Train_Data$Online,Train_Data$Personal.Loan,row.vars = c(2), 
+                dnn=c('Online','Personal.loan'))
+table2
+table3<- ftable(Train_Data$CreditCard,Train_Data$Personal.Loan,row.vars = c(2), 
+                dnn=c('CreditCard','Personal.loan'))
+table3
+```
+## Question-D Finding Probabilities for P(CC=1 | Loan =1), P (Online=1 | Loan=1), P(Loan=1), P(CC=1 | Loan = 0), P(Online=1 | Loan=0), P(Loan=0)
+```{r question D}
+p.CC1.loan1<-table3[2,2]/(table3[2,1]+table3[2,2])
+p.CC1.loan1
+p.online1.loan1<-table2[2,2]/(table2[2,1]+table2[2,2])
+p.online1.loan1
+p.CC1.loan0<-table3[1,2]/(table3[1,1]+table3[1,2])
+p.CC1.loan0
+p.online1.loan0<-table2[1,2]/(table2[1,1]+table2[1,2])
+p.online1.loan0
+p.loan1<-filter(Train_Data, Personal.Loan==1) %>% count()
+p.loan1<-p.loan1[[1]]/3000
+p.loan1
+p.loan0<-filter(Train_Data, Personal.Loan==0) %>% count()
+p.loan0<-p.loan0[[1]]/3000
+p.loan0
+```
+## Question-E Finding Naive Bayes Probability for P(Loan=1 | CC=1, Online=1) using the Above Probabilities
+```{r Question E Naive Bayes}
+Naive.Bayes<-(p.CC1.loan1*p.online1.loan1*p.loan1)/((p.CC1.loan1*p.online1.loan1*p.loan1)+
+                                                      (p.CC1.loan0*p.online1.loan0*p.loan0))
+Naive.Bayes
+```
+## Question-F Comparing value obtained from Question-B and Question-E
+$$\text{The probability of P(Loan=1 | CC=1, Online=1) from Question-B is 0.09814815 while from Question-E is 0.1016095.}$$
+
+$$\text{It is clearly seen that the probability of Question-E > Question-B.}$$
+$$\text{This difference is because, we have considered CC and Online as conditionally independent variables in Question-E.}$$ 
+$$\text{The probability of B is more accurate as we have not considered CC  and Online as conditionally independent variables.}$$
+
+## Question-G Finding Probability of P(Loan=1 | CC=1, Online=1) using Naive Bayes Function
+```{r Question G}
+Question.G<-naiveBayes(Personal.Loan ~ ., data = Train_Data)
+Question.G
+Ans<-predict(Question.G,Validation_Data, type="raw")
+head(Ans)
+```
+$$\text{It is found that the conditional probabilities from Question-D and Question G are equal.}$$
+$$\text{Which can be interpreted as Naive Bayes probabilities from Question E and G will also be equal.}$$
